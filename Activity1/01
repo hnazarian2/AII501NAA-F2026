@@ -1,0 +1,125 @@
+Activity 1 
+Student Name: Harout Nazarian 
+Student ID: 116431222 
+
+
+1. PEAS 
+
+a) Performance Measure: Correct classification and placement of spam/non-spam emails 
+
+Environment: File system containing .eml files, spam/email directories, and the allow, restrict, and bad-word lists 
+
+Actuators: Move .eml files into either the spam or email directory  
+
+Sensors: Read the email’s headers/domain and body, as well as the allow, restrict, and bad-word lists 
+
+b) Properties 
+
+Fully Observable/Partially Observable: Fully Observable 
+
+Deterministic/Stochastic: Deterministic 
+
+Episodic/Sequential: Episodic 
+
+Static/Dynamic: Static 
+
+Discrete/Continuous: Discrete 
+
+Single-agent/Multi-agent: Single-agent 
+
+c) A simple reflex agent is appropriate in this case, because the agent reacts and makes decisions based on predefined condition-action rules. It does so only on the current email; meaning in that moment it can’t see any further, so no inferring. 
+
+d)
+SIMPLE-REFLEX-SPAM-AGENT (email) 
+    extract sender domain from email 
+    IF domain is in allow list 
+        classify as non-spam
+    ELSE IF domain is in restrict list 
+        classify as spam 
+    ELSE 
+        count bad words in email body 
+        IF bad word count > 5 
+            classify as spam 
+        ELSE 
+            classify as non-spam 
+    move email to appropriate directory 
+
+  
+
+2. Search Problem 
+
+a) States: (x, y, z) = current amount of water in each of the jugs, where each of these variables represent the jugs respectively 
+
+Initial State: (0, 0, 0) 
+
+Goal: As long as one of the jugs is exactly 1; x=1 OR y=1 OR z=1 
+
+Actions: Fill the jugs using the faucet, empty them out from one to another, empty onto the ground 
+
+Transition model: Applying an action to (x, y, z) returns a new tuple containing the resulting amounts 
+
+b) A heuristic function would estimate how close the amount of water in a jug is compared to the goal of state (1 gallon). A state amount closer to 1 would receive a lower heuristic value, while a jug containing exactly 1-gallon precisely would have a 0 for heuristic value. However, numerical closeness doesn’t necessarily represent the actual number of actions required. So, this would be considered a simple heuristic  
+
+c) Since we have a constraint amount on each jug, we would have a finite number of states. Therefore, using BFS would find a goal state if it is a reachable one, since BFS tends to explore each level state individually. 
+
+d) 
+IS-GOAL(state) 
+    (x, y, z) ← state 
+    IF x = 1 OR y = 1 OR z = 1 
+        RETURN true 
+    RETURN false 
+EXPAND(node) 
+    (x, y, z) ← node.STATE 
+    children ← empty list 
+// Fill actions 
+    ADD NODE((12, y, z), node, "Fill 12") to children 
+    ADD NODE((x, 8, z), node, "Fill 8") to children 
+    ADD NODE((x, y, 3), node, "Fill 3") to children 
+    
+// Empty actions 
+    ADD NODE((0, y, z), node, "Empty 12") to children 
+    ADD NODE((x, 0, z), node, "Empty 8") to children 
+    ADD NODE((x, y, 0), node, "Empty 3") to children 
+    
+// Pour 12 → 8 
+    amount ← MIN(x, 8 - y) 
+    ADD NODE((x - amount, y + amount, z), node, "12 → 8") to children 
+   
+// Pour 12 → 3 
+    amount ← MIN(x, 3 - z) 
+    ADD NODE((x - amount, y, z + amount), node, "12 → 3") to children 
+    
+// Pour 8 → 12 
+    amount ← MIN(y, 12 - x) 
+    ADD NODE((x + amount, y - amount, z), node, "8 → 12") to children 
+    
+// Pour 8 → 3 
+    amount ← MIN(y, 3 - z) 
+    ADD NODE((x, y - amount, z + amount), node, "8 → 3") to children 
+    
+// Pour 3 → 12 
+    amount ← MIN(z, 12 - x) 
+    ADD NODE((x + amount, y, z - amount), node, "3 → 12") to children 
+    
+// Pour 3 → 8 
+    amount ← MIN(z, 8 - y) 
+    ADD NODE((x, y + amount, z - amount), node, "3 → 8") to children 
+
+    RETURN children 
+
+BREADTH-FIRST-SEARCH() 
+    node ← NODE((0, 0, 0)) 
+    IF IS-GOAL(node.STATE) 
+        RETURN node 
+    frontier ← FIFO queue containing node 
+    reached ← {(0, 0, 0)} 
+    WHILE frontier is not empty 
+        node ← POP(frontier) 
+        FOR EACH child IN EXPAND(node) 
+            s ← child.STATE 
+            IF IS-GOAL(s) 
+                RETURN child 
+            IF s is not in reached 
+                ADD s to reached 
+                ADD child to frontier 
+    RETURN failure 
